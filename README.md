@@ -1,1 +1,1 @@
-### Thingking Machine (fireworksr)
+### Thingking Machine (frame)

@@ -4,7 +4,6 @@ title: Thingking
 ---
 <div id="machina-config"
      data-machine-settings="{{ site.machine | jsonify | escape }}"
-     data-github-settings="{{ site.github_settings | jsonify | escape }}"
      data-app-settings="{{ site.app | jsonify | escape }}"
      data-lm-settings="{{ site.lm | jsonify | escape }}"
      data-worker-url="{{ '/assets/js/' | append: site.app.worker_name | relative_url }}"

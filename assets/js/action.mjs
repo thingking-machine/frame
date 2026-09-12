@@ -33,7 +33,7 @@ class MachineApp {
     this.settings = {};
     this.elements = {};
     
-    // Kick off the setup process
+    // Start setup process
     this._initialize();
   }
   
@@ -58,9 +58,6 @@ class MachineApp {
       workerUrl: this.configElement.dataset.workerUrl,
     };
     
-    // Fireworks-specific model name adjustment
-    this.settings.llm.model = `accounts/fireworks/models/${this.settings.llm.model}`;
-    
     console.log('Machina settings loaded:', this.settings.machine);
     console.log('LLM settings loaded:', this.settings.llm);
     
@@ -77,12 +74,9 @@ class MachineApp {
       if (['temperature', 'top_p'].includes(key)) {
         const numValue = parseFloat(value);
         this.settings.llm[key] = isNaN(numValue) ? value : numValue;
-      } else if (['max_tokens', 'prompt_truncate_len', 'top_k'].includes(key)) {
+      } else if (['max_tokens', 'top_k'].includes(key)) {
         const numValue = parseInt(value, 10);
         this.settings.llm[key] = isNaN(numValue) ? value : numValue;
-      } else if (key === 'model') {
-        // Fireworks-specific model name adjustment from query param
-        this.settings.llm[key] = `accounts/fireworks/models/${value}`;
       } else if (['instructions_file'].includes(key)) {
         // Change default Machina instructions file name if received.
         this.settings.machine['instructions_file'] = value;
@@ -103,11 +97,11 @@ class MachineApp {
       chooseFileButton: document.getElementById('chooseFileButton'),
       tokenPopupSaveButton: document.getElementById('tokenPopupSaveButton'),
       tokenPopupCancelButton: document.getElementById('tokenPopupCancelButton'),
+      loadingOverlay: document.getElementById('loading-overlay'),
+      tokenPopupInput: document.getElementById('tokenPopupInput'),
       instructionsPopupSaveButton: document.getElementById('instructionsPopupSaveButton'),
       instructionsPopupCancelButton: document.getElementById('instructionsPopupCancelButton'),
       instructionsPopupFileButton: document.getElementById('instructionsPopupFileButton'),
-      loadingOverlay: document.getElementById('loading-overlay'),
-      tokenPopupInput: document.getElementById('tokenPopupInput'),
       instructionsPopupInput: document.getElementById('instructionsPopupInput')
     };
     
@@ -133,6 +127,7 @@ class MachineApp {
     
     // Listen for custom events and browser events
     window.addEventListener('localStorageChanged', this.updateDisplayState);
+    window.addEventListener('localStorageUpdated', this.updateDisplayState);
     window.addEventListener('runMachineCommand', this.runLlm);
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
@@ -156,7 +151,6 @@ class MachineApp {
   };
   
   _handleInstructionsSave = () => {
-    console.log('What', this)
     const instructionsInputVal = this.elements.instructionsPopupInput.value;
     if (instructionsInputVal && instructionsInputVal.trim()) {
       this.settings.machine.instructions = instructionsInputVal.trim();
@@ -291,7 +285,7 @@ class MachineApp {
   _handleGlobalKeys = async (event) => {
     if (event.ctrlKey && event.shiftKey && event.key === 'Enter') {
       event.preventDefault();
-      this._saveToFile();
+      this._saveToFile(); // Save as plato text.
     }
     if (event.ctrlKey && event.altKey && event.key === 'Enter') {
       event.preventDefault();
@@ -299,7 +293,7 @@ class MachineApp {
     }
     if (event.altKey && event.shiftKey) {
       event.preventDefault();
-      this.runLlm();
+      this.runLlm(); // query the OpenAI
     }
   };
   
@@ -430,7 +424,7 @@ class MachineApp {
         if (this.settings.machine.instructions) return true;
         // otherwise show popup and wait for them
         showInstructionsPopup(this.settings.machine.default_instruction); // Show pop-up to ask for instructions
-        return false; // Indicate that we couldn't get instructions
+        return false; // Indicate that we couldn't get a token
       }
     }
   };
@@ -504,47 +498,11 @@ class MachineApp {
         throw new Error('LLM response is missing message content.');
       }
       
-      // const desoupedText = llmSoupToText(llmResponseData.content.trim());
-      //
-      // console.log('Regular text:', desoupedText);
-      
-      let rawContent = llmResponseData.content.trim();
-      let desoupedText = '';
-      let desoupedThoughts = '';
-      
-      // if (llmResponseData.reasoning_content) {
-      //   desoupedThoughts = llmSoupToText(llmResponseData.reasoning_content)  // No reasoning content
-      //   console.log('Thoughts text:', desoupedThoughts);
-      // }
-      const thinkStart = '<think>';
-      const thinkEnd = '</think>';
-      
-      if (rawContent.includes(thinkStart) && rawContent.includes(thinkEnd)) {
-        const startIndex = rawContent.indexOf(thinkStart);
-        const endIndex = rawContent.indexOf(thinkEnd);
-        
-        if (startIndex < endIndex) {
-          desoupedThoughts = rawContent.substring(startIndex + thinkStart.length, endIndex).trim();
-          desoupedText = rawContent.substring(endIndex + thinkEnd.length).trim();
-        } else {
-          desoupedText = rawContent;
-        }
-      } else {
-        desoupedText = rawContent;
-      }
-      
-      desoupedText = llmSoupToText(desoupedText);
-      if (desoupedThoughts) {
-        desoupedThoughts = llmSoupToText(desoupedThoughts);
-      } else if (llmResponseData.reasoning_content) {
-        desoupedThoughts = llmSoupToText(llmResponseData.reasoning_content);
-      }
-      
-      console.log('Regular text:', desoupedText);
-      console.log('Thoughts text:', desoupedThoughts);
+      // Desoup it all.
+      const desoupedText = llmSoupToText(llmResponseData.content);
       
       const newCmjMessage = {
-        role: llmResponseData.role,
+        role: 'assistant', // llmResponseData.role,
         name: this.settings.machine.name,
         content: desoupedText
       };
@@ -559,9 +517,6 @@ class MachineApp {
       localStorage.setItem('multilogue', updatedPlatoText);
       this.updateDisplayState();
       console.log('Dialogue updated with LLM response.');
-      
-      localStorage.setItem('thoughts', desoupedThoughts);
-      console.log('Thoughts updated with LLM response.');
       
     } catch (processingError) {
       console.error('Error processing LLM response:', processingError);

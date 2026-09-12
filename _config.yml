@@ -13,16 +13,14 @@ title: Thingking Machine
 description: A machine is a thing. Things can not think. ...but some of them can thingk!
 
 lm:
-  model: glm-5p2
+  model: gpt-5.4-mini
   max_tokens: 100000
   reasoning_effort: high
-  prompt_truncate_len: 100000
   temperature: 1.0
   top_p: 0.7
-  top_k: 50
 
 app:
-  worker_name: fireapi.js
+  worker_name: oaiapi.js
 
 machine:
   name: Thingking-Machine
@@ -30,7 +28,7 @@ machine:
   instructions_file: thingking.md
   token: fireworks
   server: https://localhost:443
-  apiUrl: https://api.fireworks.ai/inference/v1/chat/completions
+  apiUrl: https://api.openai.com/v1/chat/completions
   default_instruction: >
     You are Thingking-Machine — a language model designed to
     participate as an active entity in multi-entity/multi-turn

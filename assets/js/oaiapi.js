@@ -33,25 +33,14 @@ self.onmessage = async function(event) {
 
         // --- 4. Prepare the final API payload ---
         const defaultApiParameters = {
-            model: llmSettings.model,
-            max_tokens: llmSettings.max_tokens || 4096,
-            reasoning_effort: llmSettings.reasoning_effort || "high",
-            prompt_truncate_len: llmSettings.prompt_truncate_len || 10000,
+            model: llmSettings.model || machineConfig.llm,
+            max_completion_tokens: llmSettings.max_tokens || 8192,
             temperature: llmSettings.temperature || 1.0,
             top_p: llmSettings.top_p || 0.9,
-            top_k: llmSettings.top_k || 50,
-            frequency_penalty: 0,
-            presence_penalty: 0,
-            repetition_penalty: 1,
-            n: 1,
-            ignore_eos: false,
-            stop: "stop",
-            echo: false,
             response_format: {"type":"text"},
-            stream: false,
-            context_length_exceeded_behavior: "truncate"
+            stream: false
         };
-
+        console.log('Worker: Default API parameters:', defaultApiParameters)
         // Merge default parameters, then incoming user parameters (which might override temp, max_tokens, etc.),
         const finalApiPayload = {
             ...defaultApiParameters,
@@ -70,7 +59,7 @@ self.onmessage = async function(event) {
             body: JSON.stringify(finalApiPayload)
         };
 
-        console.log('Worker: Making API call to Fireworks API with payload:', finalApiPayload);
+        console.log('Worker: Making API call to OpenAI API with payload:', finalApiPayload);
         const apiCallResponse = await fetch(machineConfig.apiUrl, apiOptions);
 
         if (!apiCallResponse.ok) {
@@ -87,8 +76,9 @@ self.onmessage = async function(event) {
 
         const apiData = await apiCallResponse.json();
         console.log('Worker: API call successful, response:', apiData);
-
-        const msgResponse = apiData.choices[0].message // meta's response text in its content.text of it
+        const choice = apiData.choices[0]
+        console.log('Worker: API choice:', choice);
+        const msgResponse = choice.message // OpenAI's API response text is in choices[0].message.content
 
         // Send the successful result back to the main thread
         self.postMessage({ type: 'success', data: msgResponse });

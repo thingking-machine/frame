@@ -26,7 +26,7 @@ machine:
   name: Thingking-Machine
   verb: Thingking
   instructions_file: thingking.md
-  token: fireworks
+  token: openai
   server: https://localhost:443
   apiUrl: https://api.openai.com/v1/chat/completions
   default_instruction: >

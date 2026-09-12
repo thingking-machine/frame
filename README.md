@@ -1,1 +1,1 @@
-### Thingking Machine (frame)
+### Thingking Machine (openai)

@@ -58,7 +58,7 @@ class MachineApp {
       workerUrl: this.configElement.dataset.workerUrl,
     };
     
-    console.log('Machina settings loaded:', this.settings.machine);
+    console.log('Machine settings loaded:', this.settings.machine);
     console.log('LLM settings loaded:', this.settings.llm);
     
     this._applyQueryParameters();

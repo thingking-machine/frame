@@ -13,14 +13,14 @@ title: Thingking Machine
 description: A machine is a thing. Things can not think. ...but some of them can thingk!
 
 lm:
-  model: gpt-5.4-mini
+  model: gemma-4-31b-it
   max_tokens: 100000
-  reasoning_effort: high
   temperature: 1.0
-  top_p: 0.7
+  top_p: 0.9
+  include_thoughts: true
 
 app:
-  worker_name: oaiapi.js
+  worker_name: gemapi.js
 
 machine:
   name: Thingking-Machine
@@ -28,7 +28,7 @@ machine:
   instructions_file: thingking.md
   token: openai
   server: https://localhost:443
-  apiUrl: https://api.openai.com/v1/chat/completions
+  apiUrl: https://generativelanguage.googleapis.com/v1beta/models/
   default_instruction: >
     You are Thingking-Machine — a language model designed to
     participate as an active entity in multi-entity/multi-turn

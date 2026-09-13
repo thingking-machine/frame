@@ -1,1 +1,1 @@
-### Thingking Machine (openai)
+### Thingking Machine (gemma)
